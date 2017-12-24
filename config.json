@@ -1,0 +1,66 @@
+{
+    "bridge": {
+        "name": "Homebridge",
+        "username": "CC:22:3D:E3:CE:30",
+        "port": 51826,
+        "pin": "133-45-678"
+    },
+    "accessories": [
+        {
+            "accessory": "HomebridgeSwitchController-chan1",
+            "name": "gp1-chan1-switch",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan2",
+            "name": "gp1-chan2-switch",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan3",
+            "name": "gp1-chan3-switch",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan4",
+            "name": "gp1-chan4-switch",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan5",
+            "name": "gp1-chan5-brightness",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan6",
+            "name": "gp1-chan6-brightness",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan7",
+            "name": "gp1-chan7-brightness",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        },
+        {
+            "accessory": "HomebridgeSwitchController-chan8",
+            "name": "gp1-chan8-brightness",
+            "PORT": 2300,
+            "HOST": "192.168.1.117",
+            "GROUP": "1"
+        }
+    ]
+}
