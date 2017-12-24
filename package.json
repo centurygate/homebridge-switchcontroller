@@ -1,0 +1,29 @@
+{
+  "name": "homebridge-switchcontroller",
+  "version": "1.0.0",
+  "description": "Homebridge plugin for switchcontroller",
+  "main": "index.js",
+  "dependencies": {
+    
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url":"git+https://github.com/centurygate/homebridge-switchcontroller.git"
+  },
+  "keywords": [
+    "homebridge",
+    "switchcontroller",
+    "homebridge-plugin"
+  ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge":">=0.2.0"
+  },
+  "author": "centurygate@163.com",
+  "license": "MIT",
+  "homepage": "https://github.com/centurygate/homebridge-switchcontroller#readme"
+}
