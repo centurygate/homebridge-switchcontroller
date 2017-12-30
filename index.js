@@ -29,7 +29,7 @@ client.on('data', function (data) {
     // console.log('DATA: ' + data);
     console.log("                                                            ");
     console.log("| ---------------------------------------------------------|");
-    console.log("| RX DATA : "+ cmd);
+    console.log("| RX DATA : "+ data);
     console.log("| ---------------------------------------------------------|");
     console.log("                                                            ");
     // 完全关闭连接
