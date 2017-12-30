@@ -130,6 +130,7 @@ HomebridgeSwitchController.prototype = {
                     console.log("| ---------------------------------------------------------|");
                     console.log("                                                            ");
                     me.currentState = !me.currentState;
+                    return next();
                 }
             });
         }
