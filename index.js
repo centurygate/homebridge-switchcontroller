@@ -99,13 +99,13 @@ function HomebridgeSwitchController(log, config) {
 HomebridgeSwitchController.prototype = {
 
     getSwitchState: function (next) {
-        console.log("next is " + next);
+        //console.log("next is " + next);
         console.log("getSwitchState====currentState:" + this.currentState);
         // console.log(next);
         return next(null, this.currentState);
     },
     setSwitchState: function (powerOn, next) {
-        console.log("next is " + next);
+        //console.log("next is " + next);
         console.log("setSwitchState=====powerOn : " + powerOn);
         var CHANID = mapobj[this.accessoryname];
         if (CHANID.length == 1) {
