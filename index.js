@@ -25,7 +25,13 @@ client.connect(PORT, HOST, function () {
 // 为客户端添加“data”事件处理函数
 // data是服务器发回的数据
 client.on('data', function (data) {
-    console.log('DATA: ' + data);
+
+    // console.log('DATA: ' + data);
+    console.log("                                                            ");
+    console.log("| ---------------------------------------------------------|");
+    console.log("| RX DATA : "+ cmd);
+    console.log("| ---------------------------------------------------------|");
+    console.log("                                                            ");
     // 完全关闭连接
     //client.destroy();
 });
@@ -34,7 +40,27 @@ client.on('data', function (data) {
 client.on('close', function () {
     console.log('Connection closed');
 });
+client.on('error',function(){
+    console.log("                                                            ");
+    console.log("| ---------------------------------------------------------|");
+    console.log("| The host is Unreachable, Reconnect after 5 seconds...... |");
+    console.log("| ---------------------------------------------------------|");
+    console.log("                                                            ");
+    
+    // setTimeout(function(){
+    //     client.connect(PORT, HOST, function() {
 
+    //         console.log('CONNECTED TO: ' + HOST + ':' + PORT);
+    //         // 建立连接后立即向服务器发送数据，服务器将收到这些数据 
+    //         client.write('I am Chuck Norris!');
+        
+    //     });
+    // },5000);
+    setTimeout(function(){
+        client.connect(PORT, HOST);
+    },5000);
+    
+});
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
@@ -73,30 +99,61 @@ function HomebridgeSwitchController(log, config) {
 HomebridgeSwitchController.prototype = {
 
     getSwitchState: function (next) {
+        console.log("next is " + next);
         console.log("getSwitchState====currentState:" + this.currentState);
-        console.log(next);
+        // console.log(next);
         return next(null, this.currentState);
     },
     setSwitchState: function (powerOn, next) {
+        console.log("next is " + next);
         console.log("setSwitchState=====powerOn : " + powerOn);
         var CHANID = mapobj[this.accessoryname];
         if (CHANID.length == 1) {
             CHANID = "0" + CHANID;
         }
-        console.log("Operation On " + GROUP + "-" + CHANID);
+        // console.log("Operation On " + GROUP + "-" + CHANID);
         var me = this;
         if (powerOn) {
-            var cmd = "*S,0," + GROUP + "," + CHANID + ";\n";
-            console.log("cmd : " + cmd);
-            client.write(cmd);
+            var cmd = "*S,0," + GROUP + "," + CHANID + ";";
+            // console.log("cmd : " + cmd);
+
+            client.write(cmd,function(err){
+                if(err)
+                {
+                    console.log("Error info :"+err);
+                }
+                else
+                {
+                    console.log("                                                            ");
+                    console.log("| ---------------------------------------------------------|");
+                    console.log("| TX DATA : "+ cmd);
+                    console.log("| ---------------------------------------------------------|");
+                    console.log("                                                            ");
+                    me.currentState = !me.currentState;
+                }
+            });
         }
         else {
-            var cmd = "*C,0," + GROUP + "," + CHANID + ";\n";
-            console.log("cmd : " + cmd);
-            client.write(cmd);
-        }
-        me.currentState = !me.currentState;
-        return next();
+            var cmd = "*C,0," + GROUP + "," + CHANID + ";";
+            // console.log("cmd : " + cmd);
+            
+            client.write(cmd,function(err){
+                if(err)
+                {
+                    console.log("Error info :"+err);
+                }
+                else
+                {
+                    console.log("                                                            ");
+                    console.log("| ---------------------------------------------------------|");
+                    console.log("| TX DATA : "+ cmd);
+                    console.log("| ---------------------------------------------------------|");
+                    console.log("                                                            ");
+                    me.currentState = !me.currentState;
+                    return next();
+                }
+            });
+        }        
     },
     getServices: function () {
         var me = this;
@@ -123,6 +180,7 @@ HomebridgeSwitchController.prototype = {
 
 function HomebridgeBrightnessController(log, config) {
     this.currentValue = 0;
+    this.currentState = false;
     this.log = log;
 
     this.accessoryname = config["accessory"];
@@ -163,7 +221,7 @@ HomebridgeBrightnessController.prototype = {
     },
     getBrightnessValue: function (next) {
         console.log("getBrightnessValue====currentValue:" + this.currentValue);
-        console.log(next);
+        // console.log(next);
         return next(null, this.currentValue);
     },
     setBrightnessValue: function (brightnessValue, next) {
@@ -172,13 +230,29 @@ HomebridgeBrightnessController.prototype = {
         if (CHANID.length == 1) {
             CHANID = "0" + CHANID;
         }
-        console.log("Operation On " + GROUP + "-" + CHANID);
+        //console.log("Operation On " + GROUP + "-" + CHANID);
         var me = this;
         var cmd = "*A,0," + GROUP + "," + CHANID + ";*Z," + parseInt(brightnessValue*255/100).toString(16) + ";";
-        console.log("cmd : " + cmd);
-        client.write(cmd);
-        this.currentValue = brightnessValue;
-        return next();
+        //console.log("cmd : " + cmd);
+        // client.write(cmd);
+        client.write(cmd,function(err)
+        {
+            if(err)
+            {
+                console.log("Error info :"+err);
+            }
+            else
+            {
+                console.log("                                                            ");
+                console.log("| ---------------------------------------------------------|");
+                console.log("| TX DATA : "+ cmd);
+                console.log("| ---------------------------------------------------------|");
+                console.log("                                                            ");
+                me.currentValue = brightnessValue;
+                return next();
+            }
+        });
+
     },
     getServices: function () {
         var me = this;
