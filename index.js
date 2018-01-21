@@ -19,7 +19,6 @@ if (('HOST' in configobj["accessories"][0]) && ('PORT' in configobj["accessories
 }
 client.connect(PORT, HOST, function () {
     console.log('CONNECTED TO: ' + HOST + ':' + PORT);
-    // 建立连接后立即向服务器发送数据，服务器将收到这些数据
 });
 
 // 为客户端添加“data”事件处理函数
