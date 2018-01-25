@@ -1,66 +1,55 @@
 {
     "bridge": {
-        "name": "Homebridge",
+        "name": "LinkMe",
         "username": "CC:22:3D:E3:CE:30",
         "port": 51826,
         "pin": "133-45-678"
     },
     "accessories": [
         {
-            "accessory": "HomebridgeSwitchController-chan1",
+            "accessory": "gp1-chan1-switch",
             "name": "gp1-chan1-switch",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
+            "port": "2301",
+            "host": "192.168.1.41",
+            "groupId": "1",
+            "channelId": "1",
+            "channeltype": "switch"
         },
         {
-            "accessory": "HomebridgeSwitchController-chan2",
+            "accessory": "gp1-chan2-switch",
             "name": "gp1-chan2-switch",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
+            "port": "2301",
+            "host": "192.168.1.41",
+            "groupId": "1",
+            "channelId": "2",
+            "channeltype": "switch"
         },
         {
-            "accessory": "HomebridgeSwitchController-chan3",
+            "accessory": "gp1-chan3-switch",
             "name": "gp1-chan3-switch",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
+            "port": "2301",
+            "host": "192.168.1.41",
+            "groupId": "1",
+            "channelId": "3",
+            "channeltype": "switch"
         },
         {
-            "accessory": "HomebridgeSwitchController-chan4",
+            "accessory": "gp1-chan4-switch",
             "name": "gp1-chan4-switch",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
+            "port": "2301",
+            "host": "192.168.1.41",
+            "groupId": "1",
+            "channelId": "4",
+            "channeltype": "switch"
         },
         {
-            "accessory": "HomebridgeSwitchController-chan5",
-            "name": "gp1-chan5-brightness",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
-        },
-        {
-            "accessory": "HomebridgeSwitchController-chan6",
-            "name": "gp1-chan6-brightness",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
-        },
-        {
-            "accessory": "HomebridgeSwitchController-chan7",
-            "name": "gp1-chan7-brightness",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
-        },
-        {
-            "accessory": "HomebridgeSwitchController-chan8",
-            "name": "gp1-chan8-brightness",
-            "PORT": 2300,
-            "HOST": "192.168.1.117",
-            "GROUP": "1"
+            "accessory": "gp0-chan1-bulb",
+            "name": "gp0-chan1-bulb",
+            "port": "2301",
+            "host": "192.168.1.41",
+            "groupId": "0",
+            "channelId": "1",
+            "channeltype": "bulb"
         }
     ]
 }
