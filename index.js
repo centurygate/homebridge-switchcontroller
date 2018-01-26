@@ -58,7 +58,7 @@ function process(data)
         // console.log("condition3:"+ignoreRegPatThree.exec(element));
         var condition3 = (null !== ignoreRegPatThree.exec(element));
         
-        console.log("condition1 = "+condition1 +" condition2 = "+condition2 + " condition3 = " + condition3);
+        //console.log("condition1 = "+condition1 +" condition2 = "+condition2 + " condition3 = " + condition3);
         if(condition1 && condition2 && condition3)
         {
             //可以使用： @1*A;@1*A,*Z,00y;@1*S,0,0,01; 来测试这个分支的处理
@@ -73,7 +73,7 @@ function process(data)
             console.log("After Process,cmddata is : "+cmddata);
             if(cmddata.length ==0)
             {
-                console.log("Return......");
+               // console.log("Return......");
                 return;
             }
             goon = true;
@@ -85,7 +85,7 @@ function process(data)
        
         if(result!=null) 
         {
-            console.log("result[0] is : "+result[0]);
+            //console.log("result[0] is : "+result[0]);
             /*********************************
              * 
              
@@ -99,7 +99,7 @@ function process(data)
             var arrfirst = result[0].split(',');
             if(arrfirst.length != 5)
             {
-                console.log("2 Invalid Command:"+result[0]);
+               // console.log("2 Invalid Command:"+result[0]);
     
                  //从cmddata中去除错误数据
                 cmddata = cmddata.substring(result[0].length);
@@ -117,7 +117,7 @@ function process(data)
             var recvchanId = parseInt(arrfirst[3],16);
             if(isNaN(recvreserv) || isNaN(recvgroupId) || isNaN(recvchanId) ||(recvreserv !=0)||(recvgroupId <0 || recvgroupId > 15)||(recvchanId <0 || recvchanId > 255))
             {
-                console.log('Reserved Number or GroupId or ChannelID Wrong!');
+                //console.log('Reserved Number or GroupId or ChannelID Wrong!');
                  //从cmddata中去除错误数据
                 cmddata = cmddata.substring(result[0].length);
                 if(cmddata.length ==0)
@@ -133,7 +133,7 @@ function process(data)
             var zValue = zValueReg.exec(result[0].split('*Z,')[1]);
             if(null == zValue)
             {
-                console.log('zValue is Wrong!');
+                //console.log('zValue is Wrong!');
                  //从cmddata中去除错误数据
                 cmddata = cmddata.substring(result[0].length);
                 if(cmddata.length ==0)
@@ -153,15 +153,23 @@ function process(data)
                 
                 if((typeof(servicecenter[recvgroupId][recvchanId]['channeltype']) !='undefined') && (servicecenter[recvgroupId][recvchanId]['channeltype']=='bulb'))
                 {
+                    //console.log("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"].brightness = "+zValue);
                     console.log("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"].brightness = "+zValue);
-                    servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.Brightness).updateValue(zValue);
+                    servicecenter[recvgroupId][recvchanId].currentValue = parseInt(zValue,10);
+                    //servicecenter[recvgroupId][recvchanId]['brightness'] = parseInt(zValue,10);
+                    //servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.Brightness).updateValue(zValue);
+                    servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(zValue);
                     if (zValue > 0) 
                     {
-                        servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.On).updateValue(true);
+                        //servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.On).updateValue(true);
+                        servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(true);
+                        servicecenter[recvgroupId][recvchanId].currentState = true;
                     }
                     else
                     {
-                        servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.On).updateValue(false);
+                        // servicecenter[recvgroupId][recvchanId]['service'].getCharacteristic(Characteristic.On).updateValue(false);
+                        servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(false);
+                        servicecenter[recvgroupId][recvchanId].currentState = false;
                     }
                 }
                 else
@@ -195,7 +203,7 @@ function process(data)
         result = regpatOthers.exec(cmddata);
         if(result !=null)
         {
-            console.log("result[0] is : "+result[0]);
+            //console.log("result[0] is : "+result[0]);
             
             var arrothers = result[0].split(',');
             if(arrothers.length != 4)
@@ -250,10 +258,12 @@ function process(data)
                 if((typeof(servicecenter[recvgroupIdother]) !='undefined') && (typeof(servicecenter[recvgroupIdother][recvchanIdother]) != 'undefined'))
                 {
                     cmddata = cmddata.substring(result[0].length);
+                    //if((typeof(servicecenter[recvgroupIdother][recvchanIdother]['channeltype']) !='undefined') && (servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='switch' || servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='inputcontrol'))
                     if((typeof(servicecenter[recvgroupIdother][recvchanIdother]['channeltype']) !='undefined') && (servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='switch' || servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='inputcontrol'))
                     {
-                        console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"].status = "+switchstatus);
-                        servicecenter[recvgroupIdother][recvchanIdother]['service'].getCharacteristic(Characteristic.On).updateValue(switchstatus);
+                        //console.log(servicecenter[recvgroupIdother][recvchanIdother]);
+                        //console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"].status = "+switchstatus);
+                        servicecenter[recvgroupIdother][recvchanIdother].switchService.getCharacteristic(Characteristic.On).updateValue(switchstatus);
                     }
                     else
                     {
@@ -269,7 +279,7 @@ function process(data)
                 else
                 {
                     
-                    console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'");
+                    //console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'");
                     //从cmddata中去除错误数据
                     cmddata = cmddata.substring(result[0].length);
     
@@ -283,7 +293,7 @@ function process(data)
             }
             else
             {
-                console.log("非C或S指令,可直接跳过");
+                //console.log("非C或S指令,可直接跳过");
                 //从cmddata中去除不需处理的指令
                 cmddata = cmddata.substring(result[0].length);
                 if(cmddata.length ==0)
@@ -295,7 +305,7 @@ function process(data)
             }
         }
         goon = false;
-        console.log("Jumpout process------------");
+        //console.log("Jumpout process------------");
     }
     
 }
@@ -306,7 +316,7 @@ client.connect(port, host, function () {
     setInterval(function(){
         //每20秒向服务器发送心跳包
         var cmdheart = '*U;';
-        console.log("send heartbeat packet :" + cmdheart);
+        //console.log("send heartbeat packet :" + cmdheart);
         client.write(cmdheart);
     }, 20000);
 });
@@ -315,7 +325,7 @@ client.connect(port, host, function () {
 // data是服务器发回的数据
 client.on('data', function (data) {
 
-    console.log("_____________________________________________________________")
+    //console.log("_____________________________________________________________")
     // console.log('Time: ' + new Date());
     // console.log("                                                            ");
     // console.log("| ---------------------------------------------------------|");
@@ -514,10 +524,10 @@ HomebridgeSwitchController.prototype = {
         }
         if(typeof(servicecenter[me.groupId][me.channelId]) == 'undefined')
         {
-            servicecenter[me.groupId][me.channelId]={};
+            servicecenter[me.groupId][me.channelId]=me;
         }
-        servicecenter[me.groupId][me.channelId]['service'] = switchService;
-        servicecenter[me.groupId][me.channelId]['channeltype'] = me.channeltype;
+        // servicecenter[me.groupId][me.channelId]['service'] = switchService;
+        // servicecenter[me.groupId][me.channelId]['channeltype'] = me.channeltype;
 
         return [informationService, switchService];
     }
@@ -527,6 +537,7 @@ HomebridgeSwitchController.prototype = {
 
 function HomebridgeBrightnessController(log, config) {
     this.currentValue = 0;
+    this.beforeTurnOffValue = 0;
     this.currentState = false;
     this.log = log;
 
@@ -539,6 +550,7 @@ function HomebridgeBrightnessController(log, config) {
     this.groupId = config["groupId"];
     this.channelId = config["channelId"];
     this.channeltype = config["channeltype"];
+    this.initialized = false;
 }
 
 HomebridgeBrightnessController.prototype = {
@@ -578,28 +590,66 @@ HomebridgeBrightnessController.prototype = {
         if (CHANID.length == 1) {
             CHANID = "0" + CHANID;
         }
-        console.log("Operation On " + GROUP + "-" + CHANID);
+        //console.log("Operation On " + GROUP + "-" + CHANID);
         var me = this;
-        // if (powerOn) {
-        //     var cmd = "*S,0," + GROUP + "," + CHANID + ";\n";
-        //     console.log("cmd : " + cmd);
-        //     client.write(cmd);
-        // }
-        // else {
-        //     var cmd = "*C,0," + GROUP + "," + CHANID + ";\n";
-        //     console.log("cmd : " + cmd);
-        //     client.write(cmd);
-        // }
+        if (powerOn) {
+            // var cmd = "*A,0," + GROUP + "," + CHANID + ";*Z,0"+parseInt(me.beforeTurnOffValue*255/100).toString(16)+";";
+            // console.log("                                                            ");
+            // console.log("| ---------------------------------------------------------|");
+            // console.log("| TX DATA : "+ cmd);
+            // console.log("| ---------------------------------------------------------|");
+            // console.log("                                                            ");
+            // client.write(cmd);
+        }
+        else {
+            // if((typeof(servicecenter[me.groupId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]['brightness']) != 'undefined'))
+            // {
+            //     me.currentValue = servicecenter[me.groupId][me.channelId]['brightness'];
+            //     console.log('Remeber me.currentValue = '+me.currentValue);
+            // }
+            console.log("In setBulbState me.currentValue = "+me.currentValue);
+            me.beforeTurnOffValue = me.currentValue;
+            var cmd = "*C,0," + GROUP + "," + CHANID + ";";
+            console.log("                                                            ");
+            console.log("| ---------------------------------------------------------|");
+            console.log("| TX DATA : "+ cmd);
+            console.log("| ---------------------------------------------------------|");
+            console.log("                                                            ");
+            client.write(cmd);
+        }
         me.currentState = !me.currentState;
         return next();
     },
     getBrightnessValue: function (next) {
         console.log("getBrightnessValue====currentValue:" + this.currentValue);
         // console.log(next);
-        return next(null, this.currentValue);
+        var CHANID = this.channelId+'';
+        var GROUP = this.groupId;
+        if (CHANID.length == 1) {
+            CHANID = "0" + CHANID;
+        }
+        var cmd = "*P,0," + GROUP + "," + CHANID + ";";
+            // console.log("cmd : " + cmd);
+            
+        client.write(cmd,function(err){
+            if(err)
+            {
+                console.log("Error info :"+err);
+            }
+            else
+            {
+                console.log("                                                            ");
+                console.log("| ---------------------------------------------------------|");
+                console.log("| TX DATA : "+ cmd);
+                console.log("| ---------------------------------------------------------|");
+                console.log("                                                            ");
+                return next(null, this.currentValue);
+            }
+        });
+        
     },
     setBrightnessValue: function (brightnessValue, next) {
-        console.log("setBrightnessValue=====brightnessValue : " + brightnessValue);
+        
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         if (CHANID.length == 1) {
@@ -607,6 +657,42 @@ HomebridgeBrightnessController.prototype = {
         }
         //console.log("Operation On " + GROUP + "-" + CHANID);
         var me = this;
+        // if(!me.initialized)
+        // {
+        //     if(me.currentValue !=0)
+        //     {
+        //         brightnessValue = me.currentValue;
+        //     }
+        //     else
+        //     {
+        //         if((typeof(servicecenter[me.groupId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]['brightness']) != 'undefined'))
+        //         {
+        //             brightnessValue = servicecenter[me.groupId][me.channelId]['brightness'];
+        //         }
+        //     }
+            
+        // }
+        console.log("me.currentState : "+me.currentState);
+        if(me.currentState == false)
+        {
+            console.log("In setBrightnessValue Condition  me.beforeTurnOffValue = "+me.beforeTurnOffValue);
+            //if((me.currentValue == 0)&&(typeof(servicecenter[me.groupId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]) != 'undefined') && (typeof(servicecenter[me.groupId][me.channelId]['brightness']) != 'undefined')&&(servicecenter[me.groupId][me.channelId]['brightness']==0))
+            if((me.beforeTurnOffValue == 0))
+            {
+                brightnessValue = 100;
+            }
+            else
+            {
+                brightnessValue = me.beforeTurnOffValue;
+            }
+        }
+
+        // else
+        // {
+        //     brightnessValue = me.currentValue;
+        // }
+        console.log("setBrightnessValue=====brightnessValue : " + brightnessValue);
+
         var cmd = "*A,0," + GROUP + "," + CHANID + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
         //console.log("cmd : " + cmd);
         // client.write(cmd);
@@ -624,10 +710,17 @@ HomebridgeBrightnessController.prototype = {
                 console.log("| ---------------------------------------------------------|");
                 console.log("                                                            ");
                 me.currentValue = brightnessValue;
-                return next();
+                me.beforeTurnOffValue = brightnessValue;
+                console.log("In setBrightnessValue me.currentValue = "+me.currentValue);
+                // me.initialized = true;
             }
         });
-
+        
+        
+        setTimeout(function(){
+                me.brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(me.currentValue);
+        },100);
+        return next();
     },
     getServices: function () {
         var me = this;
@@ -641,12 +734,13 @@ HomebridgeBrightnessController.prototype = {
 
 
         var brightnessService = new Service.Lightbulb(me.name);
+         brightnessService.getCharacteristic(Characteristic.On)
+            .on('get', this.getBulbState.bind(this))
+            .on('set', this.setBulbState.bind(this));
         brightnessService.getCharacteristic(Characteristic.Brightness)
             .on('get', this.getBrightnessValue.bind(this))
             .on('set', this.setBrightnessValue.bind(this));
-        brightnessService.getCharacteristic(Characteristic.On)
-            .on('get', this.getBulbState.bind(this))
-            .on('set', this.setBulbState.bind(this));
+       
         this.informationService = informationService;
         this.brightnessService = brightnessService;
 
@@ -658,10 +752,12 @@ HomebridgeBrightnessController.prototype = {
         }
         if(typeof(servicecenter[me.groupId][me.channelId]) == 'undefined')
         {
-            servicecenter[me.groupId][me.channelId]={};
+            servicecenter[me.groupId][me.channelId]=me;
         }
-	    servicecenter[me.groupId][me.channelId]['service'] = brightnessService;
-        servicecenter[me.groupId][me.channelId]['channeltype'] = me.channeltype;
+
+	    // servicecenter[me.groupId][me.channelId]['service'] = brightnessService;
+     //    servicecenter[me.groupId][me.channelId]['channeltype'] = me.channeltype;
+     //    servicecenter[me.groupId][me.channelId]['brightness'] = me.currentValue;
 
         return [informationService,brightnessService];
     }
