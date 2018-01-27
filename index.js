@@ -321,9 +321,9 @@ client.on('data', function (data) {
 // 为客户端添加“close”事件处理函数
 client.on('close', function () {
     console.log('Connection closed');
-     setTimeout(function(){
-        client.connect(port, host);
-    },100);
+    setTimeout(function(){
+       client.connect(port, host);
+   },100);
 });
 client.on('error',function(){
     console.log("                                                            ");
@@ -541,7 +541,7 @@ HomebridgeBrightnessController.prototype = {
         
     },
     setBulbState: function (powerOn, next) {
-        console.log("setBulbState  : " + powerOn);
+        //console.log("setBulbState  : " + powerOn);
         var CHANID = this.channelId+'';
         var GROUP = this.groupId;
         if (CHANID.length == 1) {
@@ -553,7 +553,7 @@ HomebridgeBrightnessController.prototype = {
 
         }
         else {
-            // console.log("In setBulbState me.currentValue = "+me.currentValue);
+            console.log("Before setBulbState off me.currentValue = "+me.currentValue);
             me.beforeTurnOffValue = me.currentValue;
             var cmd = "*C,0," + GROUP + "," + CHANID + ";";
             // console.log("                                                            ");
@@ -605,7 +605,7 @@ HomebridgeBrightnessController.prototype = {
         // console.log("me.currentState : "+me.currentState);
         if((me.currentState == false) &&(brightnessValue !=0))
         {
-            // console.log("In setBrightnessValue Condition  me.beforeTurnOffValue = "+me.beforeTurnOffValue);
+            console.log("In setBrightnessValue Condition  me.beforeTurnOffValue = "+me.beforeTurnOffValue);
             
             if((me.beforeTurnOffValue == 0))
             {
@@ -617,7 +617,7 @@ HomebridgeBrightnessController.prototype = {
             }
         }
 
-        // console.log("setBrightnessValue=====brightnessValue : " + brightnessValue);
+        console.log("setBrightnessValue  : " + brightnessValue);
 
         var cmd = "*A,0," + GROUP + "," + CHANID + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
 
@@ -640,12 +640,11 @@ HomebridgeBrightnessController.prototype = {
             }
         });
         
-        // console.log(next.toString());
+        //console.log(next.toString());
         setTimeout(function(){
                 me.brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(me.currentValue);
         },30);
         return next();
-
     },
     getServices: function () {
         var me = this;
