@@ -321,6 +321,9 @@ client.on('data', function (data) {
 // 为客户端添加“close”事件处理函数
 client.on('close', function () {
     console.log('Connection closed');
+     setTimeout(function(){
+        client.connect(port, host);
+    },100);
 });
 client.on('error',function(){
     console.log("                                                            ");
@@ -637,11 +640,12 @@ HomebridgeBrightnessController.prototype = {
             }
         });
         
-        
+        // console.log(next.toString());
         setTimeout(function(){
                 me.brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(me.currentValue);
-        },100);
+        },30);
         return next();
+
     },
     getServices: function () {
         var me = this;
