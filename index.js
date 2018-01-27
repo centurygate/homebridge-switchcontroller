@@ -381,12 +381,12 @@ HomebridgeSwitchController.prototype = {
     getSwitchState: function (next) {
         //console.log("next is " + next);
         console.log("getSwitchState====currentState:" + this.currentState);
-        var CHANID = this.channelId+'';
+        var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
-        var cmd = "*P,0," + GROUP + "," + CHANID + ";";
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
+        var cmd = "*P,0," +  GROUP.toString(16) + "," + CHANID.toString(16) + ";";
         client.write(cmd,function(err){
                 if(err)
                 {
@@ -409,15 +409,15 @@ HomebridgeSwitchController.prototype = {
         //console.log("next is " + next);
         console.log("setSwitchState=====powerOn : " + powerOn);
         
-        var CHANID = this.channelId+'';
+        var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
         
         var me = this;
         if (powerOn) {
-            var cmd = "*S,0," + GROUP + "," + CHANID + ";";
+            var cmd = "*S,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
             client.write(cmd,function(err){
                 if(err)
                 {
@@ -436,7 +436,7 @@ HomebridgeSwitchController.prototype = {
             });
         }
         else {
-            var cmd = "*C,0," + GROUP + "," + CHANID + ";";
+            var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
             // console.log("cmd : " + cmd);
             
             client.write(cmd,function(err){
@@ -515,12 +515,12 @@ HomebridgeBrightnessController.prototype = {
     getBulbState: function (next) {
         // console.log("getBulbState====currentState:" + this.currentState);
         // console.log(next);
-        var CHANID = this.channelId+'';
+        var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
-        var cmd = "*P,0," + GROUP + "," + CHANID + ";";
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
+        var cmd = "*P,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
             // console.log("cmd : " + cmd);
             
         client.write(cmd,function(err){
@@ -542,11 +542,11 @@ HomebridgeBrightnessController.prototype = {
     },
     setBulbState: function (powerOn, next) {
         //console.log("setBulbState  : " + powerOn);
-        var CHANID = this.channelId+'';
+        var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
         //console.log("Operation On " + GROUP + "-" + CHANID);
         var me = this;
         if (powerOn) {
@@ -555,7 +555,7 @@ HomebridgeBrightnessController.prototype = {
         else {
             console.log("Before setBulbState off me.currentValue = "+me.currentValue);
             me.beforeTurnOffValue = me.currentValue;
-            var cmd = "*C,0," + GROUP + "," + CHANID + ";";
+            var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
             // console.log("                                                            ");
             // console.log("| ---------------------------------------------------------|");
             // console.log("| TX DATA : "+ cmd);
@@ -569,12 +569,12 @@ HomebridgeBrightnessController.prototype = {
     getBrightnessValue: function (next) {
         // console.log("getBrightnessValue====currentValue:" + this.currentValue);
         // console.log(next);
-        var CHANID = this.channelId+'';
+        var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
-        var cmd = "*P,0," + GROUP + "," + CHANID + ";";
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
+        var cmd = "*P,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
         client.write(cmd,function(err){
             if(err)
             {
@@ -596,9 +596,9 @@ HomebridgeBrightnessController.prototype = {
         
         var CHANID = this.channelId;
         var GROUP = this.groupId;
-        if (CHANID.length == 1) {
-            CHANID = "0" + CHANID;
-        }
+        // if (CHANID.length == 1) {
+        //     CHANID = "0" + CHANID;
+        // }
         
         var me = this;
 
@@ -619,7 +619,7 @@ HomebridgeBrightnessController.prototype = {
 
         console.log("setBrightnessValue  : " + brightnessValue);
 
-        var cmd = "*A,0," + GROUP + "," + CHANID + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
+        var cmd = "*A,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
 
         client.write(cmd,function(err)
         {
@@ -641,9 +641,14 @@ HomebridgeBrightnessController.prototype = {
         });
         
         //console.log(next.toString());
+  
+        
+        
+
         setTimeout(function(){
                 me.brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(me.currentValue);
         },30);
+
         return next();
     },
     getServices: function () {
