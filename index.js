@@ -5,7 +5,7 @@ var host = '192.168.1.117';
 var port = 2300;
 var cnt = 1;
 var client = new net.Socket();
-var configobj = JSON.parse(fs.readFileSync("/home/free/.homebridge/config.json"));
+var configobj = JSON.parse(fs.readFileSync("/root/.homebridge/config.json"));
 // console.log(JSON.stringify(configobj));
 
 var servicecenter = {};
