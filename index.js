@@ -299,6 +299,7 @@ function process(data)
 client.connect(port, host, function () {
     console.log('CONNECTED TO: ' + host + ':' + port);
     // 建立连接后立即向服务器发送数据，服务器将收到这些数据
+    cmddata='';
     setInterval(function(){
         //每20秒向服务器发送心跳包
         var cmdheart = '*U;';
@@ -321,6 +322,7 @@ client.on('data', function (data) {
 // 为客户端添加“close”事件处理函数
 client.on('close', function () {
     console.log('Connection closed');
+    cmddata='';
     setTimeout(function(){
        client.connect(port, host);
    },100);
@@ -332,7 +334,7 @@ client.on('error',function(){
     console.log("| ---------------------------------------------------------|");
     console.log("                                                            ");
     console.log("servicecenter Content:");
-
+    cmddata='';
     setTimeout(function(){
         client.connect(port, host);
     },100);
