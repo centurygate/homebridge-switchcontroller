@@ -6,208 +6,205 @@ var port = 2300;
 var cnt = 1;
 var client = new net.Socket();
 var configobj = JSON.parse(fs.readFileSync("/root/.homebridge/config.json"));
-// console.log(JSON.stringify(configobj));
+// SelfConsoleLog(JSON.stringify(configobj));
 
 var servicecenter = {};
 if (('host' in configobj["accessories"][0]) && ('port' in configobj["accessories"][0])) {
-    console.log("Read From config.json==========");
-    console.log('host :' + configobj["accessories"][0]['host']);
-    console.log('port :' + configobj["accessories"][0]['port']);
+    SelfConsoleLog("Read From config.json==========");
+    SelfConsoleLog('host :' + configobj["accessories"][0]['host']);
+    SelfConsoleLog('port :' + configobj["accessories"][0]['port']);
     host = configobj["accessories"][0]['host'] || host;
     port = configobj["accessories"][0]['port'] || port;
 }
 
 //--------------------------------------------------------------------------------------------
-var regpatwithAZfirst = new RegExp('@1\\*A,[^@;]*,[^@;]*,[^@;]*;\\*Z,[^@;]*;','i');
-var regpatwithAZsecond = new RegExp('@1\\*A,[^@;]*,[^@;]*,[^@;]*;@1\\*Z,[^@;]*;','i');
+var errRegexpfirst = new RegExp('^[^(@1\\*)][^;]*;','i');
+var errRegexpsecond = new RegExp('^@1\\*Z[^;]*;','i');
+var errRegexpthird  = new RegExp('^(@1\\*[^APSCT])[^;]*;','i');
 
-var ignoreRegPatOne = new RegExp('@1\\*[AZPSTCV],0,[0-9a-fA-F]{1,2},[0-9a-fA-F]{1,2};','i');
-var ignoreRegPatTwo = new RegExp('\\*Z,0[0-9a-fA-F]{1,2};','i');
-var ignoreRegPatThree = new RegExp('@1\\*[^@;]*;');
-var cmddata ='';
+var regpatwithA = new RegExp('^@1\\*A[^;]*;','i');
+
+var regpatwithA_more = new RegExp('^@1\\*A[^;]*;[^;]*;','i');
+var regpatwithAZ = new RegExp('^@1\\*A[^;]*;(@1){0,1}\\*Z[^;]*;','i');
+
 //处理以@1*T 或@1*P 或@1*S 或@1*C 开头并以;结尾的报文内容
-var regpatOthers = new RegExp('@1\\*[TPSC],[^@;]*;');
+var regpatOthers = new RegExp('^@1\\*[TPSC],[^@;]*;');
+
+//--------------------------------------------------------------------------------------------
+
+function SelfConsoleLog(msg)
+{
+    console.log(msg);
+}
+
+var cmddata ='';
+
 function process(data)
 {
-
-    var goon = true;
     var result = null;
     cmddata +=data;
-    while(goon)
+    while(true)
     {
-        console.log('cmddata is:' + cmddata);
-        var element = cmddata.split(';')[0];
-
-        //说明cmddata里面没有';',说明数据包过来一点点则返回
-        if(element == cmddata)
+        SelfConsoleLog('cmddata is:' + cmddata);
+        var errcmdfirst = errRegexpfirst.exec(cmddata);
+        var errcmdsecond = errRegexpsecond.exec(cmddata);
+        var errcmdthird = errRegexpthird.exec(cmddata);
+        if(null != errcmdfirst)
         {
-            // console.log("cmddata has not receive ';' token");
-            // console.log("Jumpout process------------");
-            return;
+            SelfConsoleLog("Discard wrong cmd : " + errcmdfirst[0]+" (Reason: 命令格式不正确)");
+            cmddata = cmddata.substring(errcmdfirst[0].length);
+            if(cmddata.length !=0)
+            {
+                continue;
+            }
         }
-        element = element +';';
-        
-        var condition1 = (null === ignoreRegPatOne.exec(element));
-        
-        var condition2 = (null === ignoreRegPatTwo.exec(element));
-                
-        var condition3 = (null !== ignoreRegPatThree.exec(element));
-
-        if(condition1 && condition2 && condition3)
+        if(null != errcmdsecond)
         {
-            //可以使用： @1*A;@1*A,*Z,00y;@1*S,0,0,01; 来测试这个分支的处理
-            //主要针对直接发送*A;  *P;  *Z; *S; *T; *U; 另外客户端会收到@1*A; @1*P; @1*Z; @1*S; @1*T; @1*V; 本情况下直接丢弃改内容
-            //也有可能收到这样的错误数据: @1*A,*Z,00y;    或       @1*Z,00y; 或  @1*A,0,0,or,*Z,03t; 这种类似的格式也不正确,以逗号分隔后不是四个元素,
-            //即便是四个元素也需要验证其中的保留位是否位0,组号和通道号转为数值后是否位Nan或者是否符合0~F 或00~FF通道范围,同时也要检查是否存在这个组号和通道号
-
-            //console.log("UnUseful Command:"+element);
-
-            //从cmddata中去除错误数据
-            cmddata = cmddata.substring(element.length);
-            //console.log("After Process,cmddata is : "+cmddata);
-            if(cmddata.length ==0)
+            SelfConsoleLog("Discard wrong cmd : " + errcmdsecond[0]+" (Reason: 命令格式不正确)");
+            cmddata = cmddata.substring(errcmdsecond[0].length);
+            if(cmddata.length !=0)
             {
-                //console.log("Return......");
-                return;
+                continue;
             }
-            goon = true;
-            continue;
         }
-        
-        //对带@1*A模式的字符串进行处理
-        result = regpatwithAZfirst.exec(cmddata) ||regpatwithAZsecond.exec(cmddata);
-       
-        if(result!=null) 
+        if(null != errcmdthird)
         {
-            //console.log("result[0] is : "+result[0]);
-            /*********************************
-             * 
-             
-             * *     @1*A,0,0,01;*Z,037;
-             
-             
-             * *     @1*A,0,0,01;*Z,000;
-             * 
-             *********************************/
-            
-            var arrfirst = result[0].split(',');
-            if(arrfirst.length != 5)
+            SelfConsoleLog("Discard wrong cmd : " + errcmdthird[0]+" (Reason: 命令格式不正确 或 @1*V;心跳命令无需处理)");
+            cmddata = cmddata.substring(errcmdthird[0].length);
+            if(cmddata.length !=0)
             {
-               console.log("2 Invalid Command:"+result[0]);
-    
-                 //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
-                {
-                    return;
-                }
-                goon = true;
                 continue;
             }
-    
-            //验证组号和通道号的字符个数以及 范围合法性 以及保留为的合法性
-            var recvreserv = parseInt(arrfirst[1],16);
-            var recvgroupId = parseInt(arrfirst[2],16);
-            var recvchanId = parseInt(arrfirst[3],16);
-            if(isNaN(recvreserv) || isNaN(recvgroupId) || isNaN(recvchanId) ||(recvreserv !=0)||(recvgroupId <0 || recvgroupId > 15)||(recvchanId <0 || recvchanId > 255))
+        }
+
+        var cmdwithA = regpatwithA.exec(cmddata);
+        var cmdwithA_more = regpatwithA_more.exec(cmddata);
+        var cmdwithAZ = regpatwithAZ.exec(cmddata);
+
+        if(null != cmdwithA)
+        {
+            if(cmdwithA[0].split(',').length !=4)
             {
-                console.log('Reserved Number or GroupId or ChannelID Wrong!');
-                 //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
+                SelfConsoleLog("Discard wrong cmd : " + cmdwithA[0]+" (Reason: 命令格式不正确)");
+                cmddata = cmddata.substring(cmdwithA[0].length);
+                if(cmddata.length !=0)
                 {
-                    return;
+                    continue;
                 }
-                goon = true;
-                continue;
-            }
-    
-            //*Z,后面的数值应该是0xx,其中xx为两个十六进制的数
-            var zValueReg = new RegExp('0[0-9a-fA-F]{2}','ig');
-            var zValue = zValueReg.exec(result[0].split('*Z,')[1]);
-            if(null == zValue)
-            {
-                console.log('zValue is Wrong!');
-                 //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
-                {
-                    return;
-                }
-                goon = true;
-                continue;
-            }
-            zValue = parseInt(zValue,16);
-            zValue = parseInt(100*zValue/255,10); //去除小数点
-    
-            //用获取到的组号和通道号以及zValue值更新对应的亮度值,需要转换为100份儿显示
-            if((typeof(servicecenter[recvgroupId]) !='undefined') && (typeof(servicecenter[recvgroupId][recvchanId]) != 'undefined'))
-            {
-                cmddata = cmddata.substring(result[0].length);
-                
-                if((typeof(servicecenter[recvgroupId][recvchanId]['channeltype']) !='undefined') && (servicecenter[recvgroupId][recvchanId]['channeltype']=='bulb'))
-                {
-                    console.log("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"].brightness = "+zValue);
-                    servicecenter[recvgroupId][recvchanId].currentValue = parseInt(zValue,10);
-                    servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(zValue);
-                    if (zValue > 0) 
-                    {
-                        servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(true);
-                        servicecenter[recvgroupId][recvchanId].currentState = true;
-                    }
-                    else
-                    {
-                        servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(false);
-                        servicecenter[recvgroupId][recvchanId].currentState = false;
-                    }
-                }
-                else
-                {
-                    //console.log("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"]== 'undefined'"+"or channeltype is not bulb");
-                }
-                
-                if(cmddata.length ==0)
-                {
-                    return;
-                }
-                goon = true;
-                continue;
-    
             }
             else
             {
-                console.log("servicecenter["+recvgroupId+"]["+recvchanId+"] == 'undefined'");
-                 //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
+                if(null != cmdwithA_more)
                 {
-                    return;
+                    if(null != cmdwithAZ)
+                    {
+                        //--------------------------------------------------------------------------------------
+                        var arrfirst = cmdwithAZ[0].split(',');
+                        if(arrfirst.length != 5)
+                        {
+                            SelfConsoleLog("Discard wrong cmd :"+cmdwithAZ[0]+" (Reason: 命令格式不正确)");
+                            cmddata = cmddata.substring(cmdwithAZ[0].length);
+                            if(cmddata.length !=0)
+                            {
+                                continue;
+                            }
+                        }
+                
+                        //验证组号和通道号的字符个数以及 范围合法性 以及保留为的合法性
+                        var recvreserv = parseInt(arrfirst[1],16);
+                        var recvgroupId = parseInt(arrfirst[2],16);
+                        var recvchanId = parseInt(arrfirst[3],16);
+                        if(isNaN(recvreserv) || isNaN(recvgroupId) || isNaN(recvchanId) ||(recvreserv !=0)||(recvgroupId <0 || recvgroupId > 15)||(recvchanId <0 || recvchanId > 255))
+                        {
+                            SelfConsoleLog("Discard wrong cmd :"+cmdwithAZ[0]+" (Reason: 保留为|组号|通道号 存在错误)");
+                            //从cmddata中去除错误数据
+                            cmddata = cmddata.substring(cmdwithAZ[0].length);
+                            if(cmddata.length !=0)
+                            {
+                                continue;
+                            }
+                        }
+                
+                        //*Z,后面的数值应该是0xx,其中xx为两个十六进制的数
+                        var zValueReg = new RegExp('0[0-9a-fA-F]{2}','ig');
+                        var zValue = zValueReg.exec(cmdwithAZ[0].split('*Z,')[1]);
+                        if(null == zValue)
+                        {
+                            SelfConsoleLog("Discard wrong cmd :"+cmdwithAZ[0]+" (Reason: 调光值不正确)");
+                            //从cmddata中去除错误数据
+                            cmddata = cmddata.substring(cmdwithAZ[0].length);
+                            if(cmddata.length !=0)
+                            {
+                                continue;
+                            }
+                        }
+                        zValue = parseInt(zValue,16);
+                        zValue = parseInt(100*zValue/255,10); //去除小数点
+                
+                        //用获取到的组号和通道号以及zValue值更新对应的亮度值,需要转换为100份儿显示
+                        if((typeof(servicecenter[recvgroupId]) !='undefined') && (typeof(servicecenter[recvgroupId][recvchanId]) != 'undefined'))
+                        {
+                            cmddata = cmddata.substring(cmdwithAZ[0].length);
+                            
+                            if((typeof(servicecenter[recvgroupId][recvchanId]['channeltype']) !='undefined') && (servicecenter[recvgroupId][recvchanId]['channeltype']=='bulb'))
+                            {
+                                SelfConsoleLog("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"].brightness = "+zValue);
+                                servicecenter[recvgroupId][recvchanId].currentValue = parseInt(zValue,10);
+                                servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.Brightness).updateValue(zValue);
+                                if (zValue > 0) 
+                                {
+                                    servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(true);
+                                    servicecenter[recvgroupId][recvchanId].currentState = true;
+                                }
+                                else
+                                {
+                                    servicecenter[recvgroupId][recvchanId].brightnessService.getCharacteristic(Characteristic.On).updateValue(false);
+                                    servicecenter[recvgroupId][recvchanId].currentState = false;
+                                }
+                            }
+                            else
+                            {
+                                //SelfConsoleLog("servicecenter["+recvgroupId+"]["+recvchanId+"]["+"channeltype"+"]== 'undefined'"+"or channeltype is not bulb");
+                            }
+                        }
+                        else
+                        {
+                            SelfConsoleLog("Discard wrong cmd :"+cmdwithAZ[0]+" (Reason: ServiceCenter信息中找不到对应的组号和通道号)");
+                            //从cmddata中去除错误数据
+                            cmddata = cmddata.substring(cmdwithAZ[0].length);
+                            if(cmddata.length !=0)
+                            {
+                                continue;
+                            }
+                        }
+                        //--------------------------------------------------------------------------------------
+                    }
+                    else
+                    {
+                        SelfConsoleLog("Discard wrong cmd : " + cmdwithA[0] + "Reason: 调光命令后面尾随的应是*Z 或者 @1*Z ");
+                        cmddata = cmddata.substring(cmdwithA[0].length);
+                        if(cmddata.length !=0)
+                        {
+                            continue;
+                        }
+                    }
                 }
-                goon = true;
-                continue;
             }
-            
         }
-        
-        result = regpatOthers.exec(cmddata);
-        if(result !=null)
+
+        var cmdwithOthers = regpatOthers.exec(cmddata);
+        if(null != cmdwithOthers)
         {
-            //console.log("result[0] is : "+result[0]);
-            
-            var arrothers = result[0].split(',');
+            var arrothers = cmdwithOthers[0].split(',');
             if(arrothers.length != 4)
             {
-                console.log("3 Invalid Command:"+result[0]);
-    
+                SelfConsoleLog("Discard wrong cmd : " + cmdwithOthers[0]+" (Reason: 命令格式不正确)");
                  //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-    
-                if(cmddata.length ==0)
+                cmddata = cmddata.substring(cmdwithOthers[0].length);
+                if(cmddata.length !=0)
                 {
-                    return;
+                    continue;
                 }
-                goon = true;
-                continue;
             }
     
             //验证组号和通道号的字符个数以及 范围合法性 以及保留为的合法性
@@ -219,17 +216,15 @@ function process(data)
             var recvchanIdother = parseInt(arrothers[3],16);
             if(isNaN(recvreservother) || isNaN(recvgroupIdother) || isNaN(recvchanIdother) ||(recvreservother !=0)||(recvgroupIdother <0 || recvgroupIdother > 15)||(recvchanIdother <0 || recvchanIdother > 255))
             {
-                console.log('Reserved Number or GroupId or ChannelID Wrong!');
+                SelfConsoleLog("Discard wrong cmd : " + cmdwithOthers[0]+" (Reason: 保留为|组号|通道号 不正确)");
                  //从cmddata中去除错误数据
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
+                cmddata = cmddata.substring(cmdwithOthers[0].length);
+                if(cmddata.length !=0)
                 {
-                    return;
+                    continue;
                 }
-                goon = true;
-                continue;
             }
-            var cmdPrefix = result[0].split(',')[0];
+            var cmdPrefix = cmdwithOthers[0].split(',')[0];
             var switchstatus = 'none';
             
             if(cmdPrefix == '@1*C')
@@ -242,68 +237,61 @@ function process(data)
             }
             if(switchstatus !='none')
             {
-                //console.log("Enter cmd Prefix condition......");
+                //SelfConsoleLog("Enter cmd Prefix condition......");
                 //根据组号和通道号从ServiceCenter中首先找是否存在这样的一个通道号和组号,如果存在则判断是否位开关类型或者输入控制类型,是则更改状态,否则直接丢弃数据包
                 if((typeof(servicecenter[recvgroupIdother]) !='undefined') && (typeof(servicecenter[recvgroupIdother][recvchanIdother]) != 'undefined'))
                 {
-                    cmddata = cmddata.substring(result[0].length);
+                    cmddata = cmddata.substring(cmdwithOthers[0].length);
                     if((typeof(servicecenter[recvgroupIdother][recvchanIdother]['channeltype']) !='undefined') && (servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='switch' || servicecenter[recvgroupIdother][recvchanIdother]['channeltype']=='inputcontrol'))
                     {
                         servicecenter[recvgroupIdother][recvchanIdother].switchService.getCharacteristic(Characteristic.On).updateValue(switchstatus);
                     }
                     else
                     {
-                        //console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'"+"or channeltype is not switch or inputcontrol");
+                        //SelfConsoleLog("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'"+"or channeltype is not switch or inputcontrol");
                     }
-                    if(cmddata.length ==0)
+                    if(cmddata.length !=0)
                     {
-                        return;
+                        continue;
                     }
-                    goon = true;
-                    continue;
                 }
                 else
                 {
                     
-                    console.log("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'");
+                    //SelfConsoleLog("servicecenter["+recvgroupIdother+"]["+recvchanIdother+"] == 'undefined'");
+                    SelfConsoleLog("Discard wrong cmd : " + cmdwithOthers[0]+" (Reason: 组号|通道号 不正确)");
                     //从cmddata中去除错误数据
-                    cmddata = cmddata.substring(result[0].length);
-    
-                    if(cmddata.length ==0)
+                    cmddata = cmddata.substring(cmdwithOthers[0].length);
+                    if(cmddata.length !=0)
                     {
-                        return;
+                        continue;
                     }
-                    goon = true;
-                    continue;
                 }
             }
             else
             {
-                console.log("非C或S指令,可直接跳过");
+                SelfConsoleLog("Discard wrong cmd : " + cmdwithOthers[0]+" (Reason: 非C或S指令,可直接跳过)");
                 //从cmddata中去除不需处理的指令
-                cmddata = cmddata.substring(result[0].length);
-                if(cmddata.length ==0)
+                cmddata = cmddata.substring(cmdwithOthers[0].length);
+                if(cmddata.length !=0)
                 {
-                    return;
+                    continue;
                 }
-                goon = true;
-                continue;
             }
         }
-        goon = false;
-        //console.log("Jumpout process------------");
+        SelfConsoleLog("After break cmddata :"+cmddata);
+        break;
     }
-    
 }
 //--------------------------------------------------------------------------------------------
 client.connect(port, host, function () {
-    console.log('CONNECTED TO: ' + host + ':' + port);
+    SelfConsoleLog('CONNECTED TO: ' + host + ':' + port);
     // 建立连接后立即向服务器发送数据，服务器将收到这些数据
     cmddata='';
     setInterval(function(){
         //每20秒向服务器发送心跳包
         var cmdheart = '*U;';
-        //console.log("send heartbeat packet :" + cmdheart);
+        //SelfConsoleLog("send heartbeat packet :" + cmdheart);
         client.write(cmdheart);
     }, 20000);
 });
@@ -312,8 +300,8 @@ client.connect(port, host, function () {
 // data是服务器发回的数据
 client.on('data', function (data) {
 
-    //console.log("_____________________________________________________________")
-    // console.log('Time: ' + new Date());
+    //SelfConsoleLog("_____________________________________________________________")
+    // SelfConsoleLog('Time: ' + new Date());
     process(data);
     // var waitUntil = new Date(new Date().getTime() + 20 * 1000);
     // while(waitUntil > new Date()){}
@@ -321,19 +309,19 @@ client.on('data', function (data) {
 
 // 为客户端添加“close”事件处理函数
 client.on('close', function () {
-    console.log('Connection closed');
+    SelfConsoleLog('Connection closed');
     cmddata='';
     setTimeout(function(){
        client.connect(port, host);
    },100);
 });
 client.on('error',function(){
-    console.log("                                                            ");
-    console.log("| ---------------------------------------------------------|");
-    console.log("| The host is Unreachable, Reconnect after 5 seconds...... |");
-    console.log("| ---------------------------------------------------------|");
-    console.log("                                                            ");
-    console.log("servicecenter Content:");
+    SelfConsoleLog("                                                            ");
+    SelfConsoleLog("| ---------------------------------------------------------|");
+    SelfConsoleLog("| The host is Unreachable, Reconnect after 5 seconds...... |");
+    SelfConsoleLog("| ---------------------------------------------------------|");
+    SelfConsoleLog("                                                            ");
+    SelfConsoleLog("servicecenter Content:");
     cmddata='';
     setTimeout(function(){
         client.connect(port, host);
@@ -344,12 +332,12 @@ module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     UUIDGen = homebridge.hap.UUIDGen;
-    console.log("============================================");
+    SelfConsoleLog("============================================");
 
 
-    // console.log("Config Context : " + JSON.stringify(configobj['accessories']));
-    console.log("++++++++++++++++++++++++++++++++++++++++++++");
-    console.log("=============Total Accessory : "+configobj['accessories'].length+"================");
+    // SelfConsoleLog("Config Context : " + JSON.stringify(configobj['accessories']));
+    SelfConsoleLog("++++++++++++++++++++++++++++++++++++++++++++");
+    SelfConsoleLog("=============Total Accessory : "+configobj['accessories'].length+"================");
 
     for (var i = 0; i < configobj['accessories'].length; i++) {
         if ((configobj['accessories'][i]['name'].split('-')[2] == 'switch') || (configobj['accessories'][i]['name'].split('-')[2] =='inputcontrol')) {
@@ -369,9 +357,9 @@ function HomebridgeSwitchController(log, config) {
 
     this.accessoryname = config["accessory"];
     
-    console.log("this.accessoryname :" + this.accessoryname);
-    console.log("accessory :" + config["accessory"]);
-    console.log("name :" + config["name"]);
+    SelfConsoleLog("this.accessoryname :" + this.accessoryname);
+    SelfConsoleLog("accessory :" + config["accessory"]);
+    SelfConsoleLog("name :" + config["name"]);
     this.name = config["name"];
     this.groupId = config["groupId"];
     this.channelId = config["channelId"];
@@ -381,8 +369,8 @@ function HomebridgeSwitchController(log, config) {
 HomebridgeSwitchController.prototype = {
 
     getSwitchState: function (next) {
-        //console.log("next is " + next);
-        console.log("getSwitchState====currentState:" + this.currentState);
+        //SelfConsoleLog("next is " + next);
+        SelfConsoleLog("getSwitchState====currentState:" + this.currentState);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         // if (CHANID.length == 1) {
@@ -392,24 +380,24 @@ HomebridgeSwitchController.prototype = {
         client.write(cmd,function(err){
                 if(err)
                 {
-                    console.log("Error info :"+err);
+                    SelfConsoleLog("Error info :"+err);
                 }
                 else
                 {
-                    console.log("                                                            ");
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("| TX DATA : "+ cmd);
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("                                                            ");
-                    return next(null, this.currentState);
+                    SelfConsoleLog("                                                            ");
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("| TX DATA : "+ cmd);
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("                                                            ");
+                    
                 }
             });
-        // console.log(next);
+        return next(null, this.currentState);
         
     },
     setSwitchState: function (powerOn, next) {
-        //console.log("next is " + next);
-        console.log("setSwitchState=====powerOn : " + powerOn);
+        //SelfConsoleLog("next is " + next);
+        SelfConsoleLog("setSwitchState=====powerOn : " + powerOn);
         
         var CHANID = this.channelId;
         var GROUP = this.groupId;
@@ -423,41 +411,42 @@ HomebridgeSwitchController.prototype = {
             client.write(cmd,function(err){
                 if(err)
                 {
-                    console.log("Error info :"+err);
+                    SelfConsoleLog("Error info :"+err);
                 }
                 else
                 {
-                    console.log("                                                            ");
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("| TX DATA : "+ cmd);
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("                                                            ");
+                    SelfConsoleLog("                                                            ");
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("| TX DATA : "+ cmd);
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("                                                            ");
                     me.currentState = !me.currentState;
-                    return next();
+                    
                 }
             });
         }
         else {
             var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
-            // console.log("cmd : " + cmd);
+            // SelfConsoleLog("cmd : " + cmd);
             
             client.write(cmd,function(err){
                 if(err)
                 {
-                    console.log("Error info :"+err);
+                    SelfConsoleLog("Error info :"+err);
                 }
                 else
                 {
-                    console.log("                                                            ");
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("| TX DATA : "+ cmd);
-                    console.log("| ---------------------------------------------------------|");
-                    console.log("                                                            ");
+                    SelfConsoleLog("                                                            ");
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("| TX DATA : "+ cmd);
+                    SelfConsoleLog("| ---------------------------------------------------------|");
+                    SelfConsoleLog("                                                            ");
                     me.currentState = !me.currentState;
-                    return next();
+                    
                 }
             });
-        }        
+        }
+        return next();        
     },
     getServices: function () {
         var me = this;
@@ -502,9 +491,9 @@ function HomebridgeBrightnessController(log, config) {
 
     this.accessoryname = config["accessory"];
     
-    console.log("this.accessoryname :" + this.accessoryname);
-    console.log("accessory :" + config["accessory"]);
-    console.log("name :" + config["name"]);
+    SelfConsoleLog("this.accessoryname :" + this.accessoryname);
+    SelfConsoleLog("accessory :" + config["accessory"]);
+    SelfConsoleLog("name :" + config["name"]);
     this.name = config["name"];
     this.groupId = config["groupId"];
     this.channelId = config["channelId"];
@@ -515,62 +504,63 @@ function HomebridgeBrightnessController(log, config) {
 HomebridgeBrightnessController.prototype = {
 
     getBulbState: function (next) {
-        // console.log("getBulbState====currentState:" + this.currentState);
-        // console.log(next);
+        // SelfConsoleLog("getBulbState====currentState:" + this.currentState);
+        // SelfConsoleLog(next);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         // if (CHANID.length == 1) {
         //     CHANID = "0" + CHANID;
         // }
         var cmd = "*P,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
-            // console.log("cmd : " + cmd);
+            // SelfConsoleLog("cmd : " + cmd);
             
         client.write(cmd,function(err){
             if(err)
             {
-                console.log("Error info :"+err);
+                SelfConsoleLog("Error info :"+err);
             }
             else
             {
-                // console.log("                                                            ");
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("| TX DATA : "+ cmd);
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("                                                            ");
-                return next(null, this.currentState);
+                // SelfConsoleLog("                                                            ");
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("| TX DATA : "+ cmd);
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("                                                            ");
+                
             }
         });
+        return next(null, this.currentState);
         
     },
     setBulbState: function (powerOn, next) {
-        //console.log("setBulbState  : " + powerOn);
+        //SelfConsoleLog("setBulbState  : " + powerOn);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         // if (CHANID.length == 1) {
         //     CHANID = "0" + CHANID;
         // }
-        //console.log("Operation On " + GROUP + "-" + CHANID);
+        //SelfConsoleLog("Operation On " + GROUP + "-" + CHANID);
         var me = this;
         if (powerOn) {
 
         }
         else {
-            console.log("Before setBulbState off me.currentValue = "+me.currentValue);
+            SelfConsoleLog("Before setBulbState off me.currentValue = "+me.currentValue);
             me.beforeTurnOffValue = me.currentValue;
             var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
-            // console.log("                                                            ");
-            // console.log("| ---------------------------------------------------------|");
-            // console.log("| TX DATA : "+ cmd);
-            // console.log("| ---------------------------------------------------------|");
-            // console.log("                                                            ");
+            // SelfConsoleLog("                                                            ");
+            // SelfConsoleLog("| ---------------------------------------------------------|");
+            // SelfConsoleLog("| TX DATA : "+ cmd);
+            // SelfConsoleLog("| ---------------------------------------------------------|");
+            // SelfConsoleLog("                                                            ");
             client.write(cmd);
         }
         me.currentState = !me.currentState;
         return next();
     },
     getBrightnessValue: function (next) {
-        // console.log("getBrightnessValue====currentValue:" + this.currentValue);
-        // console.log(next);
+        // SelfConsoleLog("getBrightnessValue====currentValue:" + this.currentValue);
+        // SelfConsoleLog(next);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         // if (CHANID.length == 1) {
@@ -580,19 +570,19 @@ HomebridgeBrightnessController.prototype = {
         client.write(cmd,function(err){
             if(err)
             {
-                console.log("Error info :"+err);
+                SelfConsoleLog("Error info :"+err);
             }
             else
             {
-                // console.log("                                                            ");
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("| TX DATA : "+ cmd);
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("                                                            ");
-                return next(null, this.currentValue);
+                // SelfConsoleLog("                                                            ");
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("| TX DATA : "+ cmd);
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("                                                            ");
+                
             }
         });
-        
+        return next(null, this.currentValue);
     },
     setBrightnessValue: function (brightnessValue, next) {
         
@@ -604,10 +594,10 @@ HomebridgeBrightnessController.prototype = {
         
         var me = this;
 
-        // console.log("me.currentState : "+me.currentState);
+        // SelfConsoleLog("me.currentState : "+me.currentState);
         if((me.currentState == false) &&(brightnessValue !=0))
         {
-            console.log("In setBrightnessValue Condition  me.beforeTurnOffValue = "+me.beforeTurnOffValue);
+            SelfConsoleLog("In setBrightnessValue Condition  me.beforeTurnOffValue = "+me.beforeTurnOffValue);
             
             if((me.beforeTurnOffValue == 0))
             {
@@ -619,7 +609,7 @@ HomebridgeBrightnessController.prototype = {
             }
         }
 
-        console.log("setBrightnessValue  : " + brightnessValue);
+        SelfConsoleLog("setBrightnessValue  : " + brightnessValue);
 
         var cmd = "*A,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
 
@@ -627,22 +617,22 @@ HomebridgeBrightnessController.prototype = {
         {
             if(err)
             {
-                console.log("Error info :"+err);
+                SelfConsoleLog("Error info :"+err);
             }
             else
             {
-                // console.log("                                                            ");
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("| TX DATA : "+ cmd);
-                // console.log("| ---------------------------------------------------------|");
-                // console.log("                                                            ");
+                // SelfConsoleLog("                                                            ");
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("| TX DATA : "+ cmd);
+                // SelfConsoleLog("| ---------------------------------------------------------|");
+                // SelfConsoleLog("                                                            ");
                 me.currentValue = brightnessValue;
                 me.beforeTurnOffValue = brightnessValue;
-                // console.log("In setBrightnessValue me.currentValue = "+me.currentValue);
+                // SelfConsoleLog("In setBrightnessValue me.currentValue = "+me.currentValue);
             }
         });
         
-        //console.log(next.toString());
+        //SelfConsoleLog(next.toString());
   
         
         
