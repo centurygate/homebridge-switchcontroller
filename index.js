@@ -36,7 +36,16 @@ function SelfConsoleLog(msg)
 {
     console.log(msg);
 }
-
+function ConvertTwoHexStr(channelId)
+{
+    if ( channelId < 16) {
+        return "0" + channelId.toString(16).toUpperCase();
+    }
+    else
+    {
+        return channelId.toString(16).toUpperCase();
+    }
+}
 var cmddata ='';
 
 function process(data)
@@ -376,7 +385,7 @@ HomebridgeSwitchController.prototype = {
         // if (CHANID.length == 1) {
         //     CHANID = "0" + CHANID;
         // }
-        var cmd = "*P,0," +  GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+        var cmd = "*P,0," +  GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
         client.write(cmd,function(err){
                 if(err)
                 {
@@ -407,7 +416,7 @@ HomebridgeSwitchController.prototype = {
         
         var me = this;
         if (powerOn) {
-            var cmd = "*S,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+            var cmd = "*S,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
             client.write(cmd,function(err){
                 if(err)
                 {
@@ -426,7 +435,7 @@ HomebridgeSwitchController.prototype = {
             });
         }
         else {
-            var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+            var cmd = "*C,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
             // SelfConsoleLog("cmd : " + cmd);
             
             client.write(cmd,function(err){
@@ -511,7 +520,7 @@ HomebridgeBrightnessController.prototype = {
         // if (CHANID.length == 1) {
         //     CHANID = "0" + CHANID;
         // }
-        var cmd = "*P,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+        var cmd = "*P,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
             // SelfConsoleLog("cmd : " + cmd);
             
         client.write(cmd,function(err){
@@ -547,7 +556,7 @@ HomebridgeBrightnessController.prototype = {
         else {
             SelfConsoleLog("Before setBulbState off me.currentValue = "+me.currentValue);
             me.beforeTurnOffValue = me.currentValue;
-            var cmd = "*C,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+            var cmd = "*C,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
             // SelfConsoleLog("                                                            ");
             // SelfConsoleLog("| ---------------------------------------------------------|");
             // SelfConsoleLog("| TX DATA : "+ cmd);
@@ -566,7 +575,7 @@ HomebridgeBrightnessController.prototype = {
         // if (CHANID.length == 1) {
         //     CHANID = "0" + CHANID;
         // }
-        var cmd = "*P,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";";
+        var cmd = "*P,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";";
         client.write(cmd,function(err){
             if(err)
             {
@@ -611,7 +620,7 @@ HomebridgeBrightnessController.prototype = {
 
         SelfConsoleLog("setBrightnessValue  : " + brightnessValue);
 
-        var cmd = "*A,0," + GROUP.toString(16) + "," + CHANID.toString(16) + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16) + ";";
+        var cmd = "*A,0," + GROUP.toString(16).toUpperCase() + "," + CHANID.toString(16).toUpperCase() + ";*Z,0" + parseInt(brightnessValue*255/100).toString(16).toUpperCase() + ";";
 
         client.write(cmd,function(err)
         {
