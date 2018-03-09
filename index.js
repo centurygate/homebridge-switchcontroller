@@ -550,13 +550,29 @@ HomebridgeBrightnessController.prototype = {
         // }
         //SelfConsoleLog("Operation On " + GROUP + "-" + CHANID);
         var me = this;
+        var localbrightness = 0;
         if (powerOn) {
-
+            if(me.beforeTurnOffValue == 0)
+            {
+                localbrightness = 100;
+            }
+            else
+            {
+                localbrightness = me.beforeTurnOffValue;
+            }
+             var cmd = "*A,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";*Z,0" + parseInt(localbrightness*255/100).toString(16).toUpperCase() + ";";
+            // SelfConsoleLog("                                                            ");
+            // SelfConsoleLog("| ---------------------------------------------------------|");
+            // SelfConsoleLog("| TX DATA : "+ cmd);
+            // SelfConsoleLog("| ---------------------------------------------------------|");
+            // SelfConsoleLog("                                                            ");
+            client.write(cmd);
         }
         else {
             SelfConsoleLog("Before setBulbState off me.currentValue = "+me.currentValue);
             me.beforeTurnOffValue = me.currentValue;
-            var cmd = "*C,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";";
+            //var cmd = "*C,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";";
+            var cmd = "*A,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";*Z,0" + parseInt(0*255/100).toString(16).toUpperCase() + ";";
             // SelfConsoleLog("                                                            ");
             // SelfConsoleLog("| ---------------------------------------------------------|");
             // SelfConsoleLog("| TX DATA : "+ cmd);
