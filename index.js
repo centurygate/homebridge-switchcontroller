@@ -513,7 +513,7 @@ function HomebridgeBrightnessController(log, config) {
 HomebridgeBrightnessController.prototype = {
 
     getBulbState: function (next) {
-        // SelfConsoleLog("getBulbState====currentState:" + this.currentState);
+        SelfConsoleLog("getBulbState====currentState:" + this.currentState);
         // SelfConsoleLog(next);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
@@ -521,7 +521,7 @@ HomebridgeBrightnessController.prototype = {
         //     CHANID = "0" + CHANID;
         // }
         var cmd = "*P,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";";
-            // SelfConsoleLog("cmd : " + cmd);
+        SelfConsoleLog("cmd : " + cmd);
             
         client.write(cmd,function(err){
             if(err)
@@ -542,7 +542,7 @@ HomebridgeBrightnessController.prototype = {
         
     },
     setBulbState: function (powerOn, next) {
-        //SelfConsoleLog("setBulbState  : " + powerOn);
+        SelfConsoleLog("setBulbState  : " + powerOn);
         var CHANID = this.channelId;
         var GROUP = this.groupId;
         // if (CHANID.length == 1) {
@@ -561,11 +561,11 @@ HomebridgeBrightnessController.prototype = {
                 localbrightness = me.beforeTurnOffValue;
             }
              var cmd = "*A,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";*Z,0" + parseInt(localbrightness*255/100).toString(16).toUpperCase() + ";";
-            // SelfConsoleLog("                                                            ");
-            // SelfConsoleLog("| ---------------------------------------------------------|");
-            // SelfConsoleLog("| TX DATA : "+ cmd);
-            // SelfConsoleLog("| ---------------------------------------------------------|");
-            // SelfConsoleLog("                                                            ");
+            SelfConsoleLog("                                                            ");
+            SelfConsoleLog("| ---------------------------------------------------------|");
+            SelfConsoleLog("| TX DATA : "+ cmd);
+            SelfConsoleLog("| ---------------------------------------------------------|");
+            SelfConsoleLog("                                                            ");
             client.write(cmd);
         }
         else {
@@ -573,11 +573,11 @@ HomebridgeBrightnessController.prototype = {
             me.beforeTurnOffValue = me.currentValue;
             //var cmd = "*C,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";";
             var cmd = "*A,0," + GROUP.toString(16).toUpperCase() + "," + ConvertTwoHexStr(CHANID) + ";*Z,0" + parseInt(0*255/100).toString(16).toUpperCase() + ";";
-            // SelfConsoleLog("                                                            ");
-            // SelfConsoleLog("| ---------------------------------------------------------|");
-            // SelfConsoleLog("| TX DATA : "+ cmd);
-            // SelfConsoleLog("| ---------------------------------------------------------|");
-            // SelfConsoleLog("                                                            ");
+            SelfConsoleLog("                                                            ");
+            SelfConsoleLog("| ---------------------------------------------------------|");
+            SelfConsoleLog("| TX DATA : "+ cmd);
+            SelfConsoleLog("| ---------------------------------------------------------|");
+            SelfConsoleLog("                                                            ");
             client.write(cmd);
         }
         me.currentState = !me.currentState;
